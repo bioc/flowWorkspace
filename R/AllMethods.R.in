@@ -2023,26 +2023,45 @@ setMethod("ellipsoidGate2FlowJoVertices",signature(gate="ellipsoidGate"),functio
 	return(list(mygate,ng))
 	
 }
-.constructCalTables8.2<-function(cal,x,compID,compnames){
-			if(length(cal)==0){
-				#get all parameter names using a calibration.
- 				calpars<-unlist(lapply(xpathApply(x,"./ancestor::Sample/Parameter",xmlAttrs),function(y){y[["name"]]["calibrationIndex"%in%names(y)];}))						
- calinds<-na.omit(as.numeric(unlist(lapply(xpathApply(x,"./ancestor::Sample/Parameter",xmlAttrs),function(y){try(y[["calibrationIndex"]]["calibrationIndex"%in%names(y)],silent=TRUE);}))))				
-				cal<-sapply(calinds,function(index).getCalibrationTableByIndex(xmlRoot(x),index));
-				cal<-lapply(cal,function(x){attr(x,"type")<-"flowJo";x})
-				names(cal)<-paste(compnames[as.numeric(compID)],paste("<",calpars,">",sep=""))
-			}
-			# =============================================================================================================
-			# = Check the lower and upper range of parameters that are linear. We may need to transform the data as well. =
-			# =============================================================================================================
-			lintrans<-unlist(xpathApply(x,"./ancestor::Sample/Parameter",function(x){if(xmlGetAttr(x,"highValue")[[1]]=="4096"){xmlGetAttr(x,"name")[[1]]}else NULL}))
-			if(length(lintrans)!=0){
-				lt<-sapply(lintrans,function(y){f<-function(x){x*64};attr(f,"type")<-"gateOnly";f})
-				names(lt)<-lintrans;
-				cal<-c(lt,cal)
-			}
-	return(cal);
+#
+#Function to construct the data transformation tables from a pre-8.2 flowJo workspace
+#
+.constructCalTables8.2<-function(cal,x,compID,compnames=NULL){ 
+                        if(length(cal)==0){ 
+                                #get all parameter names using a calibration. 
+                                calpars<-unlist(lapply(xpathApply(x,"./ancestor::Sample/Parameter",xmlAttrs),function(y){y[["name"]]["calibrationIndex"%in%names(y)];}),use.names=FALSE)                                               
+
+ calinds<-na.omit(as.numeric(unlist(lapply(xpathApply(x,"./ancestor::Sample/Parameter",xmlAttrs),function(y){try(y[["calibrationIndex"]]["calibrationIndex"%in%names(y)],silent=TRUE);}),use.names=FALSE)))                            
+
+                                cal<-sapply(calinds,function(index).getCalibrationTableByIndex(xmlRoot(x),index)); 
+                                cal<-lapply(cal,function(x){attr(x,"type")<-"flowJo";x}) 
+                                if(!is.null(compnames)&compID!=-2){ 
+                                    names(cal)<-trimWhiteSpace(paste(compnames[as.numeric(compID)],calpars)) 
+                            }else{ 
+                                #case where there is no compensation for the sample. 
+                                names(cal)<-calpars; 
+                            } 
+                        } 
+                        # =============================================================================================================
+
+                        # = Check the lower and upper range of parameters that are linear. We may need to transform the data as well. =
+
+                        # =============================================================================================================
+
+                        lintrans<-unlist(xpathApply(x,"./ancestor::Sample/Parameter",function(x){if(xmlGetAttr(x,"highValue")[[1]]=="4096"){xmlGetAttr(x,"name")[[1]]}else NULL}),use.names=FALSE)
+
+                        if(length(lintrans)!=0){ 
+                                lt<-sapply(lintrans,function(y){f<-function(x){x*64};attr(f,"type")<-"gateOnly";f}) 
+                                names(lt)<-lintrans; 
+                                if(!any(names(cal)%in%names(lt))){ 
+                                    cal<-c(lt,cal) 
+                                }else{ 
+                                    cal[names(cal)%in%names(lt)]<-lt 
+                            } 
+                        } 
+        return(cal); 
 }
+
 
 # ===============================================================================
 # = Return the version string of the flowJo version that generated the XML file =
