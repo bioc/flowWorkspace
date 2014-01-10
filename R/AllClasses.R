@@ -31,7 +31,8 @@ setOldClass("XMLInternalDocument")
 #' An R representation of a flowJo workspace.
 #' 
 #' Objects can be created by calls of the form \code{new("flowJoWorkspace.xml", ...)}.
-#' 
+#'
+#' @section Slots: 
 #' \describe{
 #'   \item{\code{version}:}{Object of class \code{"character"}. The version of the XML workspace. }
 #'   \item{\code{file}:}{Object of class \code{"character"}. The file name. }
@@ -83,7 +84,8 @@ setClass("flowJoWorkspace"
 #' transform, compensate, and gate the associated data. Whether or not a GatingHierarchy has been applied to data is encoded in the \code{flag} slot. Some methods will warn the user, or may not function correctly if the GatingHierarchy has not been executed.
 #' This mechanism is in place, largely for the purpose of speed when working with larger workspaces. 
 #' It allows the use to load a workspace and subset desired samples before proceeding to load the data. 
-
+#' 
+#' @section Slots:
 #' 
 #' \describe{
 #'     \item{\code{FCSPath}:}{Object of class \code{"character"}. A path to the fcs files associated with this GatingSet } 
@@ -246,7 +248,7 @@ setMethod("GatingSet",c("flowSet"),function(x,dMode=0,...){
 #'     #gslist2 is a GatingSetList that contains multiple GatingSets and they share the same gating and data structure
 #'     gslist2
 #'     class(gslist2)
-#'     getSamples(gslist2)
+#'     sampleNames(gslist2)
 #'     
 #'     #reference a GatingSet by numeric index
 #'     gslist2[[1]]
@@ -254,11 +256,11 @@ setMethod("GatingSet",c("flowSet"),function(x,dMode=0,...){
 #'     gslist2[["30104.fcs"]]
 #'     
 #'     #loop through all GatingSets within GatingSetList
-#'     lapply(gslist2,getSamples)
+#'     lapply(gslist2,sampleNames)
 #'     
 #'     #subset a GatingSetList by [
-#'     getSamples(gslist2[c(4,1)])
-#'     getSamples(gslist2[c(1,4)])
+#'     sampleNames(gslist2[c(4,1)])
+#'     sampleNames(gslist2[c(1,4)])
 #'     gslist2[c("30104.fcs")]
 #'     
 #'     #get flow data from it
@@ -307,7 +309,8 @@ setMethod("GatingSet",c("flowSet"),function(x,dMode=0,...){
 #' GatingSetList-class
 #' GatingSetList
 #' show,GatingSetList-method
-#' getSamples,GatingSetList-method
+#' getSamples,GatingSetList-method 
+#' sampleNames,GatingSetList-method
 #' rbind2,GatingSetList,missing-method
 #' [[,GatingSetList,numeric-method
 #' [[,GatingSetList,logical-method
@@ -319,17 +322,13 @@ setMethod("GatingSet",c("flowSet"),function(x,dMode=0,...){
 #' getGate,GatingSetList,character-method
 #' getQAStats,GatingSetList-method
 #' getPopStats,GatingSetList-method
-setClass("GatingSetList"
-    ,representation=representation(
-        data = "list"
-        ,samples="character" #this determine the order of samples exposed to user
-    ))
+setClass("GatingSetList", contains = "ncdfFlowList")
 
 validGatingSetListObject <- function(object){
   
   gs_list <- object@data
   #check overlapping samples
-  gs_samples <- unlist(lapply(gs_list, getSamples))
+  gs_samples <- unlist(lapply(gs_list, sampleNames))
   if(any(duplicated(gs_samples))){
     return ("There are overlapping samples across GatingSets!")
   }
@@ -353,7 +352,7 @@ validGatingSetListObject <- function(object){
     return (paste("GatingSet 1 and",this_error_ind+1,":",res[this_error_ind]))
   }
   #check sample vector
-  if(!.isValidSamples(object@samples,gs_list)){
+  if(!ncdfFlow:::.isValidSamples(object@samples,gs_list)){
     return ("'samples' slot is not consisitent with sample names from GatingSets!")
   }          
   return (TRUE)
@@ -399,11 +398,6 @@ setValidity("GatingSetList", validGatingSetListObject)
   fs2 <- getData(gs2)
   .compareFlowData(fs1,fs2)
 }
-#' validity check for samples slot        
-.isValidSamples<-function(samples,object){
-  
-  return (setequal(unlist(lapply(object,getSamples)),samples))
-}
 
 #' @description use \code{GatingSetList} constructor to create a GatingSetList from a list of GatingSet
 #' 
@@ -417,10 +411,11 @@ GatingSetList <- function(x,samples = NULL)
   names(x)<-NULL#strip names from the list because rbind2 doesn't like it
   flowCore:::checkClass(x, "list")
   if(is.null(samples)){
-    samples <- unlist(lapply(x,getSamples))
+    samples <- unlist(lapply(x,sampleNames))
   }
-  x <- new("GatingSetList", data = x, samples = samples)
-  return(x)
+  x <- new("ncdfFlowList", data = x, samples = samples)
+  as(x, "GatingSetList")
+  
 }
 
 

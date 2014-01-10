@@ -71,7 +71,7 @@ BEGIN_RCPP
 	string sampleName=as<string>(_sampleName);
 	GatingHierarchy* gh=gs->getGatingHierarchy(sampleName);
 	StringVec gatePath=as<StringVec>(_gatePath);
-	return wrap(gh->getNodeID(gatePath));
+	return wrap((NODEID)gh->getNodeID(gatePath));
 
 
 END_RCPP
@@ -88,7 +88,7 @@ BEGIN_RCPP
 	string sampleName=as<string>(_sampleName);
 	GatingHierarchy *gh=gs->getGatingHierarchy(sampleName);
 	int u=as<int>(_i);
-	return wrap(gh->getParent(u));
+	return wrap((NODEID)gh->getParent(u));
 END_RCPP
 }
 
@@ -102,7 +102,11 @@ BEGIN_RCPP
 	string sampleName=as<string>(_sampleName);
 	GatingHierarchy* gh=gs->getGatingHierarchy(sampleName);
 	int u=as<int>(_i);
-	return wrap(gh->getChildren(u));
+	VertexID_vec childrenID = gh->getChildren(u);
+	vector<NODEID> res;
+	for(VertexID_vec::iterator it=childrenID.begin(); it!=childrenID.end();it++)
+		res.push_back(*it);
+	return wrap(res);
 END_RCPP
 }
 
@@ -160,10 +164,10 @@ BEGIN_RCPP
 	string sampleName=as<string>(_sampleName);
 
 	GatingHierarchy* gh=gs->getGatingHierarchy(sampleName);
-	map<string,transformation* > trans=gh->getLocalTrans().getTransMap();
+	trans_map trans=gh->getLocalTrans().getTransMap();
 	List res;
 
-	for (map<string,transformation* >::iterator it=trans.begin();it!=trans.end();it++)
+	for (trans_map::iterator it=trans.begin();it!=trans.end();it++)
 	{
 		transformation * curTrans=it->second;
 		if(curTrans==NULL)
@@ -257,7 +261,7 @@ END_RCPP
  * non-cdf version
  */
 
-RcppExport SEXP R_gating(SEXP _gsPtr,SEXP _mat,SEXP _sampleName,SEXP _gains, SEXP _nodeInd,SEXP _recompute, SEXP _extend_val){
+RcppExport SEXP R_gating(SEXP _gsPtr,SEXP _mat,SEXP _sampleName,SEXP _gains, SEXP _nodeInd,SEXP _recompute, SEXP _extend_val, SEXP _ignore_case){
 BEGIN_RCPP
 
 
@@ -268,11 +272,13 @@ BEGIN_RCPP
 
 	unsigned short nodeInd=as<unsigned short>(_nodeInd);
 	bool recompute=as<bool>(_recompute);
+	bool ignore_case=as<bool>(_ignore_case);
+
 	GatingHierarchy* gh=gs->getGatingHierarchy(sampleName);
 
 	Rcpp::NumericMatrix orig(_mat);
 	unsigned sampleID=numeric_limits<unsigned>::max();//dummy sample index
-	flowData fdata(orig,sampleID);
+	flowData fdata(orig,sampleID,ignore_case);
 
 	gh->loadData(fdata);
 	if(!recompute)
@@ -559,7 +565,7 @@ BEGIN_RCPP
 		VertexID nodeID=gh->addGate(g,parentID,popName);
 
 
-		return wrap(nodeID);
+		return wrap((NODEID)nodeID);
 
 
 

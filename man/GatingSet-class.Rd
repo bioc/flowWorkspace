@@ -1,6 +1,7 @@
 \name{GatingSet-class}
 \alias{[}
 \alias{[,GatingSet,ANY-method}
+\alias{[,GatingSetList,ANY-method}
 \alias{[[}
 \alias{[[,GatingSet,character-method}
 \alias{[[,GatingSet,logical-method}
@@ -48,7 +49,8 @@
   the purpose of speed when working with larger workspaces.
   It allows the use to load a workspace and subset desired
   samples before proceeding to load the data.
-
+}
+\section{Slots}{
   \describe{ \item{\code{FCSPath}:}{Object of class
   \code{"character"}. A path to the fcs files associated
   with this GatingSet } \item{\code{data}:}{Object of class

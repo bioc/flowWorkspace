@@ -1,21 +1,19 @@
-unloadNamespace("flowWorkspace")
+
+
 
 library(flowWorkspace)
-#library(XML)
-#dyn.load("~/R/r-devel/Rbuild/library/flowWorkspace/libs/flowWorkspace.so")
+library(XML)
+library(devtools)
+load_all("~/rglab/workspace/flowWorkspace/")
 
-#lapply(list.files("~/rglab/workspace/flowWorkspace/R",full=T,pattern="*.R$"),source)
-#source("~/rglab/workspace/flowWorkspace/R/AllGenerics.R")
-#source("~/rglab/workspace/flowWorkspace/R/AllClasses.R")
-#source("~/rglab/workspace/flowWorkspace/R/GatingHierarchyInternal-Methods.R")
-#source("~/rglab/workspace/flowWorkspace/R/GatingSetInternal-Methods.R")
-#source("~/rglab/workspace/flowWorkspace/R/bitVector.R")
 macXML<-"~/rglab/workspace/flowWorkspace/data/RV144/Batch 1264 RV144.xml"
 macXML<-"~/rglab/workspace/flowWorkspace/data/Cytotrol/NHLBI/flowJo/NHLBI.xml"
 macXML<-"/shared/silo_researcher/Gottardo_R/gfinak_working/Phenotyping/FACS Analysis/001-Y-Pheno-JK.xml"
 
 macXML<-"/loc/no-backup/FlowWorkspaceTest/Lyoplate/Centralized B-cell.xml"
 macXML<-list.files(pattern="xml",path="~/rglab/workspace/flowWorkspace/data/Newell/XML workspaces",full=TRUE)[1]
+
+macXML<-"/loc/no-backup/ramey/Cytotrol/XML/CA_CytoTrol Treg.xml"
 
 #macXML<-"/loc/no-backup/HVTN054/Workspace/054-wkspace_tmp_tr.xml"
 #macXML<-"/loc/no-backup/HVTN054/FACSData/L02-060731-054-R1/L02-060731-054-R1.xml"
@@ -31,11 +29,23 @@ macXML<-"/shared/silo_researcher/Gottardo_R/mike_working/ITN029ST/QA_template.xm
 #
 #winXML<-c("Blomberg/data/Exp2_Tcell.wsp")
 macXML<-"/home/wjiang2/rglab/workspace/flowWorkspace/data/vX/Lesson_8_vX.wsp"
+macXML<-"/home/wjiang2/rglab/workspace/flowWorkspace/fjWsExamples/20131206_Treg.wsp"
 #winXML<-file.path(path,winXML)
 ############################################################################### 
 #cpp parser
 ###############################################################################
-ws<-openWorkspace(macXML[1],options=1)
+ws <- openWorkspace(macXML[1],options=1)
+getSamples(ws)
+getSampleGroups(ws)
+getKeywords(ws,"CytoTrol_CytoTrol_1.fcs")
+
+
+#modify functions within package namespace
+funcToinsert <- ".plotGate" 
+funcSym <- as.symbol(funcToinsert)
+eval(substitute(environment(ff) <- getNamespace("flowWorkspace"), list(ff = funcSym)))
+assignInNamespace(funcToinsert, eval(funcSym), ns = "flowWorkspace")
+
 
 ############################################################################### 
 ##parse as template and apply to new data			
@@ -43,20 +53,21 @@ ws<-openWorkspace(macXML[1],options=1)
 time1<-Sys.time()	
 #Rprof()
 GT<-parseWorkspace(ws
-                    ,name=4
-#					,execute=F
+                    ,name=1
+					,execute=F
 #					,includeGates=T
-                    ,subset=1:2
+                    ,subset= 1:2
 #					,subset=c("517614.fcs")
-					,isNcdf=T
+#					,isNcdf=T
 #                      ,path = "/shared/silo_researcher/Gottardo_R/gfinak_working/Phenotyping/FACS Analysis/001-Y-Pheno-JK/"
 #                    ,path="/home/wjiang2/rglab/workspace/flowWorkspace/data/vX/"
 #                    ,path="/loc/no-backup/remote_fred_hvtn/HVTN080/FACS Data/1057-M-080/"
-                    ,path="~/rglab/workspace/flowWorkspace/data/RV144/1264-L-RV144"
+#                    ,path="~/rglab/workspace/flowWorkspace/data/RV144/1264-L-RV144"
 #                    ,path="~/rglab/workspace/flowWorkspace/data/Newell"
 #                      ,path="/shared/silo_researcher/Gottardo_R/mike_working/ITN029ST"
-#                    ,path="~/rglab/workspace/flowWorkspace/data/Cytotrol/NHLBI/Bcell/"
+                    ,path="~/rglab/workspace/flowWorkspace/data/Cytotrol/NHLBI/Bcell/"
 #					,path="~/rglab/workspace/flowWorkspace/data/Cytotrol/NHLBI/Tcell/"
+#                    ,path = "/loc/no-backup/ramey/Cytotrol/Treg FCS files/Treg BIIR/"
 					,dMode=4
                     ,extend_val=0
 #                    ,column.pattern=colP
@@ -66,6 +77,21 @@ Sys.time()-time1
 Rprof(NULL)
 summaryRprof()
 getSamples(ws)
+getKeywords(GT,"CytoTrol_CytoTrol_1.fcs")
+getKeywords(GT[[1]])
+keyword(GT[[1]])
+keyword(GT[[1]],"FILENAME")
+
+
+klist <- keyword(GT)
+klist <- keyword(GT,"FILENAME")
+gslist <- GatingSetList(list(GT))
+klist <- keyword(gslist)
+keyword(gslist,"FILENAME")
+pData(gslist)
+gslist[1]
+getGate(gslist,2)
+
 gh <- GT[[1]]
 getNodes(gh)
 g <- getGate(GT[[1]],10)
