@@ -1889,6 +1889,7 @@ setMethod("sampleNames","GatingSet",function(object){
 #' sampleNames<-
 #' sampleNames<-,GatingSet-method
 #' sampleNames<-,GatingSet,ANY-method
+#' @importMethodsFrom Biobase sampleNames<-
 #' @rdname sampleNames
 #' @export
 setReplaceMethod("sampleNames",
