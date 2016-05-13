@@ -21,8 +21,8 @@
 #' It is used to extract the spline coefficient vectors from the calibration table
 #' which is computed by biexpTrans class and then return to R for constructing flowJo transformation function within R.
 #' Mainly used for openCyto autoGating process where no xml workspace is needed to create flowJo transformation.
-.getSplineCoefs <- function(channelRange = 4096L, maxValue = 262144, pos = 4.5, neg = 0, widthBasis = -10) {
-    .Call('flowWorkspace_getSplineCoefs', PACKAGE = 'flowWorkspace', channelRange, maxValue, pos, neg, widthBasis)
+.getSplineCoefs <- function(channelRange = 4096L, maxValue = 262144, pos = 4.5, neg = 0, widthBasis = -10, inverse = FALSE) {
+    .Call('flowWorkspace_getSplineCoefs', PACKAGE = 'flowWorkspace', channelRange, maxValue, pos, neg, widthBasis, inverse)
 }
 
 #' store the transformation functions created from R into GatingSet
@@ -114,6 +114,10 @@
 
 .cpp_getNegateFlag <- function(gs, sampleName, gatePath) {
     .Call('flowWorkspace_getNegateFlag', PACKAGE = 'flowWorkspace', gs, sampleName, gatePath)
+}
+
+.cpp_getHiddenFlag <- function(gs, sampleName, gatePath) {
+    .Call('flowWorkspace_getHiddenFlag', PACKAGE = 'flowWorkspace', gs, sampleName, gatePath)
 }
 
 .cpp_addGate <- function(gs, sampleName, filter, gatePath, popName) {

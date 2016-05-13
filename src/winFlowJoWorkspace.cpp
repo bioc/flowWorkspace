@@ -43,7 +43,7 @@ trans_local xFlowJoWorkspace::getTransformation(wsRootNode root,const compensati
 	unsigned short nTransParentNodes=transParentNodeRes->nodesetval->nodeNr;
 	if(nTransParentNodes<=0)
 	{
-		COUT<<"compensation not found!"<<endl;
+		COUT<<"Transformation not found!"<<endl;
 		xmlXPathFreeObject(transParentNodeRes);
 		return(res);
 	}else if(nTransParentNodes>1){
@@ -98,8 +98,9 @@ trans_local xFlowJoWorkspace::getTransformation(wsRootNode root,const compensati
 			curTran->widthBasis=atof(transNode.getProperty("width").c_str());
 			curTran->maxValue=atof(transNode.getProperty("maxRange").c_str());
 			unsigned short thisLen=atoi(transNode.getProperty("length").c_str());
-			if(thisLen!=256)
-				throw(domain_error("length is not 256 for biex transformation!"));
+			curTran->channelRange = thisLen;
+//			if(thisLen!=256)
+//				throw(domain_error("length is not 256 for biex transformation!"));
 			/*
 			 * do the lazy calibration table calculation and interpolation
 			 * when it gets saved in gh
@@ -402,6 +403,7 @@ compensation winFlowJoWorkspace::getCompensation(wsSampleNode sampleNode)
 
 		comp.cid=node.getProperty("id");
 		comp.prefix=node.getProperty("prefix");
+		comp.suffix=node.getProperty("suffix");
 		/*
 		 * -1:Acquisition-defined,to be computed from data
 		 * -2:None
@@ -768,6 +770,8 @@ gate* winFlowJoWorkspace::getGate(wsPopNode & node){
 
 
 		xmlXPathObjectPtr resGate=node.xpathInNode("Gate/*");
+		if(resGate->nodesetval->nodeNr!=1)
+			throw(logic_error("invalid 'Gate' node!"));
 		wsNode gNode(resGate->nodesetval->nodeTab[0]);
 		xmlXPathFreeObject(resGate);
 		const xmlChar * gateType=gNode.getNodePtr()->name;
