@@ -49,6 +49,7 @@ Collate:
     'flow_trans.R'
     'getSingleCellExpression.R'
     'merge_GatingSet.R'
+    'moveNode.R'
     'setGate_Methods.R'
     'utils.R'
     'zzz.R'
