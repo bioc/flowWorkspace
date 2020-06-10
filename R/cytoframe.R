@@ -468,6 +468,8 @@ setReplaceMethod("markernames",
 			
         for(i in seq_along(inds)){
           ind <- inds[i]
+          if(is.na(value[i]))
+            value[i] <- ""
           setMarker(object@pointer, channel.names[ind], value[i])
         }
           
